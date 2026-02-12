@@ -3,32 +3,29 @@
 namespace App\Filament\Pages;
 
 use Filament\Pages\Dashboard as BaseDashboard;
-use Filament\Pages\Dashboard\Concerns\HasFilters;
+use Filament\Pages\Dashboard\Concerns\HasFiltersForm; // Import Penting
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Form;
-
-// Import Widget Baru Kita
-use App\Filament\Widgets\DashboardStats;
-use App\Filament\Widgets\CombinedActivityChart;
+use App\Filament\Widgets\StatsOverview; // Import Widget Statistik
 
 class Dashboard extends BaseDashboard
 {
-    use HasFilters;
+    use HasFiltersForm; // Agar filter muncul di atas
 
-    // 1. BAGIAN FILTER (Jangan dihapus)
     public function filtersForm(Form $form): Form
     {
         return $form
             ->schema([
                 Section::make('Filter Dashboard')
+                    ->description('Filter data berdasarkan kategori dan tanggal')
                     ->schema([
-                        // Filter Tipe Laporan (Opsional, kalau mau spesifik)
+                        // 1. Filter Kategori Laporan
                         Select::make('tipe_laporan')
                             ->label('Fokus Laporan:')
                             ->options([
-                                'all' => 'Semua Laporan',
+                                'all' => 'Semua Laporan (Ringkasan)',
                                 'satpam' => 'Laporan Satpam',
                                 'tamu' => 'Buku Tamu',
                                 'kendaraan' => 'Kendaraan',
@@ -37,28 +34,25 @@ class Dashboard extends BaseDashboard
                             ->default('all')
                             ->native(false),
                             
-                        // Filter Tanggal
+                        // 2. Filter Tanggal Mulai
                         DatePicker::make('startDate')
                             ->label('Mulai Tanggal')
                             ->default(now()->subDays(7)), // Default 1 minggu terakhir
                         
+                        // 3. Filter Tanggal Selesai
                         DatePicker::make('endDate')
                             ->label('Sampai Tanggal')
                             ->default(now()),
                     ])
-                    ->columns(3), // Tampil 3 kolom biar rapi
+                    ->columns(3), // Tampil 3 kolom sejajar
             ]);
     }
 
-    // 2. BAGIAN WIDGET (Statistik & Grafik)
     public function getWidgets(): array
     {
         return [
-            // Kartu Statistik (4 Kotak di Atas)
-            DashboardStats::class,
-            
-            // Grafik Garis (Di Bawahnya)
-            CombinedActivityChart::class,
+            StatsOverview::class, // Memanggil widget yang benar
+            // CombinedActivityChart::class, // Uncomment jika file grafik sudah ada
         ];
     }
 }

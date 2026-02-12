@@ -12,6 +12,8 @@ use Filament\Tables\Table;
 use Maatwebsite\Excel\Facades\Excel; 
 use App\Exports\PackageExport; 
 use Carbon\Carbon;
+use Filament\Tables\Filters\Filter; // Import Filter
+use Illuminate\Database\Eloquent\Builder; // Import Builder
 
 class PackageReportResource extends Resource
 {
@@ -28,7 +30,8 @@ class PackageReportResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('item_name')
                             ->label('Nama Barang / Paket')
-                            ->required(),
+                            ->required()
+                            ->placeholder('Contoh: BAN BEKAS'),
 
                         Forms\Components\Select::make('condition')
                             ->label('Kondisi Barang')
@@ -39,10 +42,10 @@ class PackageReportResource extends Resource
                             ])
                             ->required(),
 
-                        // GANTI JADI receiver_name
                         Forms\Components\TextInput::make('receiver_name') 
                             ->label('Nama Penerima')
-                            ->required(),
+                            ->required()
+                            ->placeholder('Contoh: ANTO'),
 
                         Forms\Components\DatePicker::make('received_date')
                             ->label('Tanggal Diterima')
@@ -69,13 +72,39 @@ class PackageReportResource extends Resource
 
                 Tables\Columns\TextColumn::make('condition')
                     ->label('Kondisi')
-                    ->badge(),
+                    ->badge()
+                    ->colors([
+                        'success' => 'Baik',
+                        'danger' => 'Rusak',
+                        'warning' => 'Pecah',
+                    ]),
 
-                // GANTI JADI receiver_name JUGA DI SINI
                 Tables\Columns\TextColumn::make('receiver_name')
                     ->label('Penerima')
                     ->searchable(),
             ])
+            // --- BAGIAN FILTER TANGGAL ---
+            ->filters([
+                Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('from')
+                            ->label('Dari Tanggal'),
+                        Forms\Components\DatePicker::make('until')
+                            ->label('Sampai Tanggal'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('received_date', '>=', $date),
+                            )
+                            ->when(
+                                $data['until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('received_date', '<=', $date),
+                            );
+                    })
+            ])
+            // -----------------------------
             ->headerActions([
                 Tables\Actions\Action::make('export_excel')
                     ->label('Download Excel')
@@ -95,6 +124,7 @@ class PackageReportResource extends Resource
                         $start = Carbon::parse($data['start_date'])->format('Y-m-d');
                         $end = Carbon::parse($data['end_date'])->format('Y-m-d');
                         $filename = 'Laporan_Paket_' . $start . '_sd_' . $end . '.xlsx';
+                        
                         return Excel::download(new PackageExport($start, $end), $filename);
                     }),
             ])
@@ -108,8 +138,12 @@ class PackageReportResource extends Resource
                 ]),
             ]);
     }
-    
-    public static function getRelations(): array { return []; }
+
+    public static function getRelations(): array
+    {
+        return [];
+    }
+
     public static function getPages(): array
     {
         return [

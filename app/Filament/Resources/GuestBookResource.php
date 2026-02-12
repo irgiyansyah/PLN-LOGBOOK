@@ -9,9 +9,11 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Maatwebsite\Excel\Facades\Excel; // Import Excel
-use App\Exports\GuestExport; // Import Export Class
-use Carbon\Carbon; // Import Carbon untuk tanggal
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\GuestExport;
+use Carbon\Carbon;
+use Filament\Tables\Filters\Filter; // Import Filter
+use Illuminate\Database\Eloquent\Builder; // Import Builder
 
 class GuestBookResource extends Resource
 {
@@ -96,10 +98,28 @@ class GuestBookResource extends Resource
                     ->label('Tujuan')
                     ->limit(30),
             ])
+            // --- BAGIAN FILTER TANGGAL DITAMBAHKAN DI SINI ---
             ->filters([
-                //
+                Filter::make('visit_date')
+                    ->form([
+                        \Filament\Forms\Components\DatePicker::make('from')
+                            ->label('Dari Tanggal'),
+                        \Filament\Forms\Components\DatePicker::make('until')
+                            ->label('Sampai Tanggal'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('visit_date', '>=', $date),
+                            )
+                            ->when(
+                                $data['until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('visit_date', '<=', $date),
+                            );
+                    })
             ])
-            // --- ACTION DOWNLOAD EXCEL DENGAN FILTER TANGGAL ---
+            // ------------------------------------------------
             ->headerActions([
                 \Filament\Tables\Actions\Action::make('export_excel')
                     ->label('Download Excel')
@@ -124,7 +144,6 @@ class GuestBookResource extends Resource
                         return Excel::download(new GuestExport($start, $end), $filename);
                     }),
             ])
-            // ----------------------------------------------------
             ->actions([
                 \Filament\Tables\Actions\EditAction::make(),
                 \Filament\Tables\Actions\DeleteAction::make(),

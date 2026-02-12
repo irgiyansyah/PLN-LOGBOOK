@@ -3,7 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\VehicleChecklistResource\Pages;
-use App\Models\VehicleChecklist; // <--- GANTI JADI INI (Sesuai nama file asli Mas)
+use App\Models\VehicleChecklist; // Pastikan Model ini benar
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -12,10 +12,11 @@ use Filament\Tables\Table;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\VehicleExport;
 use Carbon\Carbon;
+use Filament\Tables\Filters\Filter; // Import Filter
+use Illuminate\Database\Eloquent\Builder; // Import Builder
 
 class VehicleChecklistResource extends Resource
 {
-    // GANTI JADI INI
     protected static ?string $model = VehicleChecklist::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-truck';
@@ -82,6 +83,29 @@ class VehicleChecklistResource extends Resource
                     ->label('Keterangan')
                     ->limit(20),
             ])
+            // --- BAGIAN FILTER TANGGAL DITAMBAHKAN DI SINI ---
+            ->filters([
+                Filter::make('created_at')
+                    ->label('Rentang Tanggal')
+                    ->form([
+                        Forms\Components\DatePicker::make('from')
+                            ->label('Dari Tanggal'),
+                        Forms\Components\DatePicker::make('until')
+                            ->label('Sampai Tanggal'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            );
+                    })
+            ])
+            // ------------------------------------------------
             ->headerActions([
                 Tables\Actions\Action::make('export_excel')
                     ->label('Download Excel')
