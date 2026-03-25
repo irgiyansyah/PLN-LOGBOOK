@@ -139,6 +139,8 @@ class SecurityReportResource extends Resource
                             ->label('Foto Bukti Lapangan')
                             ->image() // Hanya boleh upload gambar
                             ->directory('laporan-evidence') // Folder penyimpanan
+                            ->imageResizeTargetWidth(1024)
+                            ->imageResizeTargetHeight(1024)
                             ->columnSpanFull() // Lebar penuh
                             ->downloadable() // Bisa didownload
                             ->previewable(true), // Bisa dipreview

@@ -17,7 +17,7 @@
         .header-table { width: 100%; margin-bottom: 20px; }
         
         .logo-img {
-            width: 200px; 
+            width: 140px; 
             height: auto;
         }
         

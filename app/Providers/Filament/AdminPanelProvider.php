@@ -28,7 +28,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login(Login::class)
-            ->brandName('PLN LOGBOOK')
+            ->brandName('PLN UP3 PALOPO LOGBOOK')
             ->font('Poppins')
             ->darkMode(false)
             ->sidebarCollapsibleOnDesktop()

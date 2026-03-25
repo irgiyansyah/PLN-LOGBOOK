@@ -65,6 +65,8 @@ class GuestBookResource extends Resource
                             ->label('Foto')
                             ->image()
                             ->directory('tamu-photos')
+                            ->imageResizeTargetWidth(1024)  // Maksimal lebar 1024px
+                            ->imageResizeTargetHeight(1024) // Maksimal tinggi 1024p
                             ->columnSpanFull(),
                     ])
                     ->columns(1),
